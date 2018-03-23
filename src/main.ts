@@ -19,10 +19,9 @@ let square: Square;
 
 // TODO: replace with your scene's stuff
 
-let obj0: string;
-let mesh0: Mesh;
-
-let tex0: Texture;
+let objAlpaca: string;
+let alpaca: Mesh;
+let texAlpaca: Texture;
 
 
 var timer = {
@@ -39,21 +38,23 @@ var timer = {
 
 
 function loadOBJText() {
-  obj0 = readTextFile('../resources/obj/wahoo.obj')
+  objAlpaca = readTextFile('../resources/obj/alpaca.obj')
+  
 }
 
 
 function loadScene() {
   square && square.destroy();
-  mesh0 && mesh0.destroy();
+  alpaca && alpaca.destroy();
 
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
 
-  mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
-  mesh0.create();
+  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 2, -2));
+  alpaca.create();
 
-  tex0 = new Texture('../resources/textures/wahoo.bmp')
+  texAlpaca = new Texture('../resources/textures/alpaca.jpg')
+  
 }
 
 
@@ -102,14 +103,14 @@ function main() {
     timer.updateTime();
     renderer.updateTime(timer.deltaTime, timer.currentTime);
 
-    standardDeferred.bindTexToUnit("tex_Color", tex0, 0);
+    standardDeferred.bindTexToUnit("tex_Color", texAlpaca, 0);
 
     renderer.clear();
     renderer.clearGB();
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [mesh0]);
+    renderer.renderToGBuffer(camera, standardDeferred, [alpaca]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color

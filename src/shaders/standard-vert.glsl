@@ -26,7 +26,8 @@ void main()
     // fragment info is in view space
     mat3 invTranspose = mat3(u_ModelInvTr);
     mat3 view = mat3(u_View);
-    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
+    // set w to be camera space z
+    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), vs_Pos.z);
     fs_Pos = u_View * u_Model * vs_Pos;
     
     gl_Position = u_Proj * u_View * u_Model * vs_Pos;

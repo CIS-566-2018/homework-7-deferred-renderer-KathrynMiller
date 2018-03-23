@@ -66,10 +66,10 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost-frag.glsl'))));
-    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
+     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))));
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
 
-    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+    // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -96,7 +96,6 @@ class OpenGLRenderer {
 
 
   setSize(width: number, height: number) {
-    console.log(width, height);
     this.canvas.width = width;
     this.canvas.height = height;
 
@@ -106,6 +105,7 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
 
+    // intialize gbTargets elts to be textures (0th index is 32 bit)
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
