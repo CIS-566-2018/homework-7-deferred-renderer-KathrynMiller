@@ -1,7 +1,8 @@
-import {vec3} from 'gl-matrix';
+import {vec3, mat4, vec4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import Mesh from './geometry/Mesh';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
@@ -11,17 +12,22 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
-// const controls = {
-//   // Extra credit: Add interactivity
-// };
+ const controls = {
+  'pointilism': false,
+ };
 
-let square: Square;
+ // contains 1 in index of each post process to be applied in OpenGlRenderer
+ let processes: Array<number> = [0, 0, 0];
+ let square: Square;
+ let cube: Cube;
 
 // TODO: replace with your scene's stuff
 
 let objAlpaca: string;
 let alpaca: Mesh;
 let texAlpaca: Texture;
+let objTree: string;
+let tree: Mesh;
 
 
 var timer = {
@@ -39,19 +45,27 @@ var timer = {
 
 function loadOBJText() {
   objAlpaca = readTextFile('../resources/obj/alpaca.obj')
-  
+  objTree = readTextFile('../resources/obj/tree.obj')
 }
 
 
 function loadScene() {
+  cube && cube.destroy();
   square && square.destroy();
   alpaca && alpaca.destroy();
+  tree && tree.destroy();
 
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
 
-  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 2, -2));
+  cube = new Cube(vec3.fromValues(0, 0, 0), vec3.fromValues(2, 2, 2));
+  cube.create();
+
+  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 1.0);
   alpaca.create();
+
+  tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0);
+  tree.create();
 
   texAlpaca = new Texture('../resources/textures/alpaca.jpg')
   
@@ -68,7 +82,9 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
-  // const gui = new DAT.GUI();
+   const gui = new DAT.GUI();
+   var shaders = gui.addFolder('Post Processes');
+   var pointilism = shaders.add(controls, 'pointilism');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -95,8 +111,22 @@ function main() {
     ]);
 
   standardDeferred.setupTexUnits(["tex_Color"]);
+  let invViewProj = mat4.create();
+  mat4.invert(invViewProj, camera.projectionMatrix);
+  standardDeferred.setViewProjMatrix(invViewProj);
+  standardDeferred.setGeometryColor(vec4.fromValues(0, 0, 0, 1));
 
   function tick() {
+
+    pointilism.onChange(function() {
+      if(controls.pointilism.valueOf() == true) {
+        processes[0] = 1;
+      } else {
+        processes[0] = 0;
+      }
+    });
+    
+
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -110,13 +140,13 @@ function main() {
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [alpaca]);
+    renderer.renderToGBuffer(camera, standardDeferred, [alpaca, tree]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     renderer.renderPostProcessHDR();
     // apply 8-bit post and draw
-    renderer.renderPostProcessLDR();
+    renderer.renderPostProcessLDR(processes);
 
     stats.end();
     requestAnimationFrame(tick);

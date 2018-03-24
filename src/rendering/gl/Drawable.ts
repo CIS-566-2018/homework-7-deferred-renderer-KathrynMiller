@@ -3,12 +3,14 @@ import {gl} from '../../globals';
 abstract class Drawable {
   count: number = 0;
 
+  bufType: WebGLBuffer;
   bufIdx: WebGLBuffer;
   bufPos: WebGLBuffer;
   bufNor: WebGLBuffer;
   bufCol: WebGLBuffer;
   bufUV: WebGLBuffer;
 
+  typeBound: boolean = false;
   idxBound: boolean = false;
   posBound: boolean = false;
   norBound: boolean = false;
@@ -23,6 +25,7 @@ abstract class Drawable {
     gl.deleteBuffer(this.bufNor);
     gl.deleteBuffer(this.bufCol);
     gl.deleteBuffer(this.bufUV);
+    gl.deleteBuffer(this.bufType);
   }
 
   generateIdx() {
@@ -33,6 +36,11 @@ abstract class Drawable {
   generatePos() {
     this.posBound = true;
     this.bufPos = gl.createBuffer();
+  }
+
+  generateType() {
+    this.typeBound = true;
+    this.bufType = gl.createBuffer();
   }
 
   generateNor() {
@@ -62,6 +70,13 @@ abstract class Drawable {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
     }
     return this.posBound;
+  }
+
+  bindType(): boolean {
+    if (this.typeBound) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufType);
+    }
+    return this.typeBound;
   }
 
   bindNor(): boolean {

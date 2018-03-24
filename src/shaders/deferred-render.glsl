@@ -3,6 +3,7 @@ precision highp float;
 
 #define EPS 0.0001
 #define PI 3.1415962
+const float TWO_PI = 6.28318530718;
 
 in vec2 fs_UV;
 out vec4 out_Col;
@@ -16,15 +17,35 @@ uniform float u_Time;
 uniform mat4 u_View;
 uniform vec4 u_CamPos;
 
-vec4 fs_LightVec = vec4(4, 4, 4, 1);   
+float width = 1087.0;
+float height = 837.0;
+const vec2 cellSizePixels = vec2(192.,192.);
 
+const float numCells = 10.0;
+vec3 backCol = vec3(1.0, 0.1, 0.1);
+
+uniform mat4 u_ViewProj;
+
+vec4 fs_LightVec = vec4(4, 4, 4, 1);   
+vec4 skyShader();
+float fbm(const in vec2 uv);
+float fbm(const in vec3 uv);
+float noise(in vec2 uv);
+
+
+const vec3 sky[5] = vec3[](
+        vec3(1.0, 0.0, 0.0) / 255.0,
+vec3(0.0, 1.0, 0.0) / 255.0,
+vec3(0.0, 0.0, 1.0) / 255.0,
+vec3(1.0, 0.0, 1.0) / 255.0,
+vec3(0.0, 1.0, 1.0) / 255.0);
 
 void main() { 
 	// read from GBuffers (normal, mesh overlap, color)
 	vec3 fs_Nor = vec3(texture(u_gb0, fs_UV));
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
-	// base color
-	vec4 diffuseColor = texture(u_gb2, fs_UV);
+	 vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
+	
 	
 	vec4 H = normalize((u_CamPos + fs_LightVec) / 2.0);
 	float specularIntensity = max(pow(dot(H, vec4(fs_Nor, 0.0)), 20.0), 0.0);
@@ -36,10 +57,68 @@ void main() {
 	float ambientTerm = 0.2;
 
 	float lightIntensity = diffuseTerm + ambientTerm; 
-	 if(meshOverlap == vec4(0.0)) {
+	 if(meshOverlap == vec4(1.0)) {
 		out_Col = diffuseColor * (specularIntensity + lightIntensity);
 	 } else {
-		 out_Col = vec4(1.0, 0.1, 0.1, 1.0);
+		 out_Col = skyShader();
 	 }
 	
+}
+vec4 skyShader() {
+	// similar cell structure of pointilism
+	// random square size for bottom left cell corners 
+    vec2 uv = fs_UV;
+    
+    float cellSize = width / numCells;
+
+	vec2 cellUV = fs_UV * numCells; // width height space
+ 	vec2 cellID = floor(cellUV);  // bottom left corner & width-height space
+
+	for(float i = -1.0; i < 1.0; i++) {
+		for(float j = -1.0; j < 1.0; j++) {
+			vec2 currCell = vec2(cellID.x + i * sin(u_Time * .4), cellID.y + j * cos(u_Time * .4));
+			vec2 cellCenter = currCell + vec2(cellSize / 2.0);
+
+			//float cellVal = noise(cellCenter * u_Time * .02); // greyscale value for cell
+			float cellVal = noise(cellCenter);
+			vec3 cellCol = vec3(cellVal) * backCol;
+			
+			return vec4(cellCol, 1.0);
+		}
+	}
+	
+}
+vec2 smoothF(vec2 uv)
+{
+    return uv*uv*(3.-2.*uv);
+}
+// for use in fbm
+float noise(in vec2 uv)
+{
+    const float k = 257.0;
+    vec4 l  = vec4(floor(uv),fract(uv));
+    float u = l.x + l.y * k;
+    vec4 v  = vec4(u, u+1.,u+k, u+k+1.);
+    v       = fract(fract(1.23456789*v)*v/.987654321);
+    l.zw    = smoothF(l.zw);
+    l.x     = mix(v.x, v.y, l.z);
+    l.y     = mix(v.z, v.w, l.z);
+    return    mix(l.x, l.y, l.w);
+}
+float fbm(const in vec2 uv)
+{
+    float a = 0.5;
+    float f = 5.0;
+    float n = 0.;
+    int it = 8;
+    for(int i = 0; i < 32; i++)
+    {
+        if(i<it)
+        {
+            n += noise(uv*f)*a;
+            a *= .5;
+            f *= 2.;
+        }
+    }
+    return n;
 }

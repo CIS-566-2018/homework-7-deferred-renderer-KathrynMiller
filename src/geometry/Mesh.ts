@@ -6,17 +6,19 @@ import * as Loader from 'webgl-obj-loader';
 class Mesh extends Drawable {
   indices: Uint32Array;
   positions: Float32Array;
+  types: Float32Array;
   normals: Float32Array;
   colors: Float32Array;
   uvs: Float32Array;
   center: vec4;
+  type: number;
 
   objString: string;
 
-  constructor(objString: string, center: vec3) {
+  constructor(objString: string, center: vec3, type: number) {
     super(); // Call the constructor of the super class. This is required.
+    this.type = type;
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
-
     this.objString = objString;
   }
 
@@ -25,13 +27,20 @@ class Mesh extends Drawable {
     let norTemp: Array<number> = [];
     let uvsTemp: Array<number> = [];
     let idxTemp: Array<number> = [];
+    let typeTemp: Array<number> = [];
 
     var loadedMesh = new Loader.Mesh(this.objString);
 
     //posTemp = loadedMesh.vertices;
-    for (var i = 0; i < loadedMesh.vertices.length; i++) {
-      posTemp.push(loadedMesh.vertices[i]);
-      if (i % 3 == 2) posTemp.push(1.0);
+    for (var i = 0; i < loadedMesh.vertices.length; i+=3) {
+      posTemp.push(loadedMesh.vertices[i] + this.center[0]);
+      posTemp.push(loadedMesh.vertices[i + 1] + this.center[1]);
+      posTemp.push(loadedMesh.vertices[i + 2] + this.center[1]);
+      posTemp.push(1.0);
+    }
+
+    for (var i = 0; i < loadedMesh.vertices.length / 4; i++) {
+      typeTemp.push(this.type);
     }
 
     for (var i = 0; i < loadedMesh.vertexNormals.length; i++) {
@@ -52,12 +61,14 @@ class Mesh extends Drawable {
     this.normals = new Float32Array(norTemp);
     this.positions = new Float32Array(posTemp);
     this.uvs = new Float32Array(uvsTemp);
+    this.types = new Float32Array(typeTemp);
 
     this.generateIdx();
     this.generatePos();
     this.generateNor();
     this.generateUV();
     this.generateCol();
+    this.generateType();
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -65,6 +76,9 @@ class Mesh extends Drawable {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufNor);
     gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufType);
+    gl.bufferData(gl.ARRAY_BUFFER, this.types, gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
     gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);

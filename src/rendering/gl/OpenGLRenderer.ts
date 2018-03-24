@@ -66,8 +66,8 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))));
-    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
+     //this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))));
+     //this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/pointilism-frag.glsl'))));
 
     // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
@@ -230,6 +230,7 @@ class OpenGLRenderer {
     gbProg.setTime(this.currentTime);
 
     for (let drawable of drawables) {
+
       gbProg.draw(drawable);
     }
 
@@ -316,15 +317,18 @@ class OpenGLRenderer {
 
 
   // TODO: pass any info you need as args
-  renderPostProcessLDR() {
+  renderPostProcessLDR(processes: Array<number>) {
     // TODO: replace this with your post 8-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. motion blur) need specific info as textures
     for (let i = 0; i < this.post8Passes.length; i++){
       // pingpong framebuffers for each pass
       // if this is the last pass, default is bound
-      if (i < this.post8Passes.length - 1) gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
-      else gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      if (i < this.post8Passes.length - 1 && processes[(i + 1) % 2] == 1) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      } 
 
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
@@ -339,6 +343,7 @@ class OpenGLRenderer {
       // bind default
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
+ 
   }
 
 };
