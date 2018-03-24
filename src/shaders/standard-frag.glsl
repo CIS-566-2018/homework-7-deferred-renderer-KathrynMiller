@@ -24,12 +24,13 @@ void main() {
     // two gbuffers and basic color to the third.
 
     vec3 col = texture(tex_Color, fs_UV).rgb;
-    if(fs_Type == 2.0) {
-        col = vec3(u_Color);
-    }
     // if using textures, inverse gamma correct
     col = pow(col, vec3(2.2));
 
+    if(fs_Type == 2.0) {
+        vec3 col = vec3(u_Color);
+    }
+    
     // normal and depth value in w
     fragColor[0] = fs_Nor;
     // 1 since mesh overlaps

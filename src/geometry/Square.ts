@@ -10,10 +10,12 @@ class Square extends Drawable {
   colors: Float32Array;
   uvs: Float32Array;
   center: vec4;
+  scale: vec3
 
-  constructor(center: vec3) {
+  constructor(center: vec3, scale: vec3) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
+    this.scale = scale;
   }
 
   create() {

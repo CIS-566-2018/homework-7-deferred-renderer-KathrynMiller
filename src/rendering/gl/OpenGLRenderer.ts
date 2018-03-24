@@ -43,6 +43,14 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/tonemap-frag.glsl'))
     );
 
+    pointilism : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/pointilism-frag.glsl'))
+    );
+
+    depthField : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))
+    );
+
 
   add8BitPass(pass: PostProcess) {
     this.post8Passes.push(pass);
@@ -66,10 +74,9 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-     //this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))));
-     //this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/pointilism-frag.glsl'))));
-
-    // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+     //this.add8BitPass(this.pointilism);
+    // this.add8BitPass(this.depthField);
+// this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -217,7 +224,7 @@ class OpenGLRenderer {
     let viewProj = mat4.create();
     let view = camera.viewMatrix;
     let proj = camera.projectionMatrix;
-    let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
+    let color = vec4.fromValues(0.0, 0.2, 1.0, 1);
 
     mat4.identity(model);
     mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
@@ -324,7 +331,7 @@ class OpenGLRenderer {
     for (let i = 0; i < this.post8Passes.length; i++){
       // pingpong framebuffers for each pass
       // if this is the last pass, default is bound
-      if (i < this.post8Passes.length - 1 && processes[(i + 1) % 2] == 1) {
+      if (i < this.post8Passes.length - 1) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
       } else {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);

@@ -22,6 +22,7 @@ export class Shader {
 class ShaderProgram {
   prog: WebGLProgram;
 
+  attrType: number;
   attrPos: number;
   attrNor: number;
   attrCol: number;
@@ -48,6 +49,7 @@ class ShaderProgram {
       throw gl.getProgramInfoLog(this.prog);
     }
 
+    this.attrType = gl.getAttribLocation(this.prog, "vs_Type");
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
@@ -149,6 +151,11 @@ class ShaderProgram {
     if (this.attrPos != -1 && d.bindPos()) {
       gl.enableVertexAttribArray(this.attrPos);
       gl.vertexAttribPointer(this.attrPos, 4, gl.FLOAT, false, 0, 0);
+    }
+
+    if (this.attrType != -1 && d.bindType()) {
+      gl.enableVertexAttribArray(this.attrType);
+      gl.vertexAttribPointer(this.attrType, 1, gl.FLOAT, false, 0, 0);
     }
 
     if (this.attrNor != -1 && d.bindNor()) {

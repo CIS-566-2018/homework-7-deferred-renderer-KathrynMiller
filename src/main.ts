@@ -27,7 +27,7 @@ let objAlpaca: string;
 let alpaca: Mesh;
 let texAlpaca: Texture;
 let objTree: string;
-let tree: Mesh;
+let tree: Mesh; 
 
 
 var timer = {
@@ -55,13 +55,10 @@ function loadScene() {
   alpaca && alpaca.destroy();
   tree && tree.destroy();
 
-  square = new Square(vec3.fromValues(0, 0, 0));
+  square = new Square(vec3.fromValues(0, 0, 0), vec3.fromValues(10, 10, 10));
   square.create();
 
-  cube = new Cube(vec3.fromValues(0, 0, 0), vec3.fromValues(2, 2, 2));
-  cube.create();
-
-  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 1.0);
+  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 2.0);
   alpaca.create();
 
   tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0);
@@ -114,7 +111,6 @@ function main() {
   let invViewProj = mat4.create();
   mat4.invert(invViewProj, camera.projectionMatrix);
   standardDeferred.setViewProjMatrix(invViewProj);
-  standardDeferred.setGeometryColor(vec4.fromValues(0, 0, 0, 1));
 
   function tick() {
 

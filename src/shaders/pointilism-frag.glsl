@@ -27,7 +27,6 @@ void main() {
 
  vec2 cellUV = fs_UV * numCells; // width height space
  vec2 cellID = floor(cellUV);  // bottom left corner & width-height space
- vec2 localCellUV = fract(cellUV); // local offset in this fragments cell
 
  // iterate over 3x3 matrix of pixels
 	for(float i = -1.0; i <= 1.0; i ++) {

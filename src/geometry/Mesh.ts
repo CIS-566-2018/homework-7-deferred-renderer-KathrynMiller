@@ -37,9 +37,6 @@ class Mesh extends Drawable {
       posTemp.push(loadedMesh.vertices[i + 1] + this.center[1]);
       posTemp.push(loadedMesh.vertices[i + 2] + this.center[1]);
       posTemp.push(1.0);
-    }
-
-    for (var i = 0; i < loadedMesh.vertices.length / 4; i++) {
       typeTemp.push(this.type);
     }
 
