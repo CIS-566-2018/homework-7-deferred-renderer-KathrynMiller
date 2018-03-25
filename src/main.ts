@@ -13,6 +13,7 @@ import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
  const controls = {
+   'depthOfField': false,
   'pointilism': false,
  };
 
@@ -81,7 +82,9 @@ function main() {
   // Add controls to the gui
    const gui = new DAT.GUI();
    var shaders = gui.addFolder('Post Processes');
+   var depthOfField = shaders.add(controls, 'depthOfField');
    var pointilism = shaders.add(controls, 'pointilism');
+   
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -114,11 +117,19 @@ function main() {
 
   function tick() {
 
-    pointilism.onChange(function() {
-      if(controls.pointilism.valueOf() == true) {
+    depthOfField.onChange(function() {
+      if(controls.depthOfField.valueOf() == true) {
         processes[0] = 1;
       } else {
         processes[0] = 0;
+      }
+    });
+
+    pointilism.onChange(function() {
+      if(controls.pointilism.valueOf() == true) {
+        processes[1] = 1;
+      } else {
+        processes[1] = 0;
       }
     });
     
@@ -140,9 +151,9 @@ function main() {
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
-    renderer.renderPostProcessHDR();
+    renderer.renderPostProcessHDR(processes);
     // apply 8-bit post and draw
-    renderer.renderPostProcessLDR(processes);
+    renderer.renderPostProcessLDR();
 
     stats.end();
     requestAnimationFrame(tick);

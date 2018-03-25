@@ -28,7 +28,10 @@ class OpenGLRenderer {
   post8Targets: WebGLTexture[];
 
   // post processing shader lists, try to limit the number for performance reasons
+  // holds only processes to be applied
   post8Passes: PostProcess[];
+  // holds all post8passes
+  allPost8Passes: PostProcess[];
   post32Passes: PostProcess[];
 
   currentTime: number; // timer number to apply to all drawing shaders
@@ -39,8 +42,8 @@ class OpenGLRenderer {
     );
 
   // shader that maps 32-bit color to 8-bit color
-  tonemapPass : PostProcess = new PostProcess(
-    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/tonemap-frag.glsl'))
+    tonemapPass : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/tonemap-frag.glsl'))
     );
 
     pointilism : PostProcess = new PostProcess(
@@ -68,14 +71,16 @@ class OpenGLRenderer {
     this.post8Buffers = [undefined, undefined];
     this.post8Targets = [undefined, undefined];
     this.post8Passes = [];
+    this.allPost8Passes = [];
 
     this.post32Buffers = [undefined, undefined];
     this.post32Targets = [undefined, undefined];
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-     //this.add8BitPass(this.pointilism);
-    // this.add8BitPass(this.depthField);
+     this.allPost8Passes.push(this.depthField);
+     this.allPost8Passes.push(this.pointilism);
+
 // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -94,6 +99,7 @@ class OpenGLRenderer {
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
+
   }
 
 
@@ -197,7 +203,7 @@ class OpenGLRenderer {
 
   updateTime(deltaTime: number, currentTime: number) {
     this.deferredShader.setTime(currentTime);
-    for (let pass of this.post8Passes) pass.setTime(currentTime);
+    for (let pass of this.allPost8Passes) pass.setTime(currentTime);
     for (let pass of this.post32Passes) pass.setTime(currentTime);
     this.currentTime = currentTime;
   }
@@ -237,7 +243,6 @@ class OpenGLRenderer {
     gbProg.setTime(this.currentTime);
 
     for (let drawable of drawables) {
-
       gbProg.draw(drawable);
     }
 
@@ -268,7 +273,7 @@ class OpenGLRenderer {
 
 
   // TODO: pass any info you need as args
-  renderPostProcessHDR() {
+  renderPostProcessHDR(processes: Array<number>) {
     // TODO: replace this with your post 32-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. bloom) need specific info as textures
@@ -300,6 +305,9 @@ class OpenGLRenderer {
     // apply tonemapping
     // TODO: if you significantly change your framework, ensure this doesn't cause bugs!
     // render to the first 8 bit buffer if there is more post, else default buffer
+    
+    // update applied pass list
+    this.updatePostPassList(processes);
     if (this.post8Passes.length > 0) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]);
     }
@@ -319,12 +327,11 @@ class OpenGLRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[Math.max(0, i) % 2]);
 
     this.tonemapPass.draw();
-
   }
 
 
   // TODO: pass any info you need as args
-  renderPostProcessLDR(processes: Array<number>) {
+  renderPostProcessLDR() {
     // TODO: replace this with your post 8-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. motion blur) need specific info as textures
@@ -344,13 +351,23 @@ class OpenGLRenderer {
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[(i) % 2]);
-
+      
       this.post8Passes[i].draw();
-
+      
       // bind default
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
+      }
  
+  }
+
+// update post8 pass list to contain only specific passes
+  updatePostPassList(processes: Array<number>) {
+    this.post8Passes = [];
+    for(let i = 0; i < processes.length; i++) {
+      if(processes[i] == 1) {
+        this.add8BitPass(this.allPost8Passes[i]);
+      }
+    }
   }
 
 };

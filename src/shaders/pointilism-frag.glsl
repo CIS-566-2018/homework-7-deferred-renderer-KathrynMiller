@@ -11,7 +11,8 @@ float width = 1087.0;
 float height = 837.0;
 
 const float numCells = 100.0;
-const float maxDotRadius = .5; // number of pixels of largest dots radius
+const float maxDotRadius = .7; // number of pixels of largest dots radius
+vec3 contrastColor(vec3 color);
 
 //returns value in range [-1, 1]
 vec2 random2( vec2 p ) {
@@ -36,12 +37,10 @@ void main() {
 			// offset within current cell (center of prospective dot)
             vec2 dotCenter = curr + (float(random2(curr) + 1.0) / 2.0); // width, height space
 			// color at offset point
-			vec3 cellCol = vec3(texture(u_frame, dotCenter / numCells));
-			//out_Col = vec4(cellCol, 1.0);
-			//break;
+			vec3 cellCol = contrastColor(vec3(texture(u_frame, dotCenter / numCells)));
 			float l = 0.21 * cellCol[0] + 0.72 * cellCol[1] + 0.07 * cellCol[2];
 			// radius of dot at offset point
-			float currRad = maxDotRadius * (1.0 -l);
+			float currRad = (maxDotRadius + (random2(curr).y / 2.0)) * (1.0 -l);
 			if(length(dotCenter - cellUV) < currRad) {
 				color = vec4(0.0, 0.0, 0.0, 1.0);
 				break;
@@ -50,4 +49,13 @@ void main() {
     }
 
  out_Col = color;
+}
+
+vec3 contrastColor(vec3 color) {
+	float contrast = -30.0;
+	float factor = ((259.0 * (contrast + 255.0)) / (255.0 * (259.0 - contrast)));
+	float r = clamp(color[0] * factor, 0.0, 1.0);
+	float g = clamp(color[1] * factor, 0.0, 1.0);
+	float b = clamp(color[2] * factor, 0.0, 1.0);
+	return vec3(r, g, b);
 }
