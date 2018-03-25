@@ -100,8 +100,14 @@ class OpenGLRenderer {
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
 
-  }
+    // have depth take up 1st texture when depthfield is in use
+    var  depth = gl.getUniformLocation(this.depthField.prog, "depth");
+    this.depthField.use();
+    gl.uniform1i(depth, 1);
 
+    }
+
+   
 
   setClearColor(r: number, g: number, b: number, a: number) {
     gl.clearColor(r, g, b, a);
@@ -282,7 +288,7 @@ class OpenGLRenderer {
       // Pingpong framebuffers for each pass.
       // In other words, repeatedly flip between storing the output of the
       // current post-process pass in post32Buffers[1] and post32Buffers[0].
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]); // current pass will be written here
 
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
@@ -294,7 +300,7 @@ class OpenGLRenderer {
       // these textures, so we alternate reading from the 0th and 1th textures
       // each frame (the texture we wrote to in our previous render pass).
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
+      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]); // read from the previously written to target
 
       this.post32Passes[i].draw();
 
@@ -309,10 +315,10 @@ class OpenGLRenderer {
     // update applied pass list
     this.updatePostPassList(processes);
     if (this.post8Passes.length > 0) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]); // write tonemap to first 8 buffer
     }
     else {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null); // write tonemap to screen
     }
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -323,10 +329,9 @@ class OpenGLRenderer {
 
     gl.activeTexture(gl.TEXTURE0);
     // bound texture is the last one processed before
-
     gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[Math.max(0, i) % 2]);
 
-    this.tonemapPass.draw();
+    this.tonemapPass.draw(); // draw to bound buffer
   }
 
 
@@ -352,6 +357,10 @@ class OpenGLRenderer {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[(i) % 2]);
       
+      // store normals and depth in 1st texture slot
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[0]);
+
       this.post8Passes[i].draw();
       
       // bind default

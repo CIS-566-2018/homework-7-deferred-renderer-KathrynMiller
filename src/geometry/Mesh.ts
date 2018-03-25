@@ -12,14 +12,16 @@ class Mesh extends Drawable {
   uvs: Float32Array;
   center: vec4;
   type: number;
+  color: vec3;
 
   objString: string;
 
-  constructor(objString: string, center: vec3, type: number) {
+  constructor(objString: string, center: vec3, type: number, color: vec3) {
     super(); // Call the constructor of the super class. This is required.
     this.type = type;
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
     this.objString = objString;
+    this.color = color;
   }
 
   create() {  
@@ -28,6 +30,7 @@ class Mesh extends Drawable {
     let uvsTemp: Array<number> = [];
     let idxTemp: Array<number> = [];
     let typeTemp: Array<number> = [];
+    let colorTemp: Array<number> = [];
 
     var loadedMesh = new Loader.Mesh(this.objString);
 
@@ -38,6 +41,10 @@ class Mesh extends Drawable {
       posTemp.push(loadedMesh.vertices[i + 2] + this.center[1]);
       posTemp.push(1.0);
       typeTemp.push(this.type);
+      colorTemp.push(this.color[0]);
+      colorTemp.push(this.color[1]);
+      colorTemp.push(this.color[2]);
+      colorTemp.push(1.0);
     }
 
     for (var i = 0; i < loadedMesh.vertexNormals.length; i++) {
@@ -48,17 +55,12 @@ class Mesh extends Drawable {
     uvsTemp = loadedMesh.textures;
     idxTemp = loadedMesh.indices;
 
-    // white vert color for now
-    this.colors = new Float32Array(posTemp.length);
-    for (var i = 0; i < posTemp.length; ++i){
-      this.colors[i] = 1.0;
-    }
-
     this.indices = new Uint32Array(idxTemp);
     this.normals = new Float32Array(norTemp);
     this.positions = new Float32Array(posTemp);
     this.uvs = new Float32Array(uvsTemp);
     this.types = new Float32Array(typeTemp);
+    this.colors = new Float32Array(colorTemp);
 
     this.generateIdx();
     this.generatePos();

@@ -28,7 +28,7 @@ void main() {
     col = pow(col, vec3(2.2));
 
     if(fs_Type == 2.0) {
-        vec3 col = vec3(u_Color);
+        vec3 col = vec3(fs_Col);
     }
     
     // normal and depth value in w

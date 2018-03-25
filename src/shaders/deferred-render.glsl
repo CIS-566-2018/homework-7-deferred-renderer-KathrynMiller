@@ -45,10 +45,6 @@ void main() {
 	vec3 fs_Nor = vec3(texture(u_gb0, fs_UV));
 	vec4 meshOverlap = texture(u_gb1, fs_UV);
 	 vec4 diffuseColor = vec4((texture(u_gb2, fs_UV)).xyz, 1.0);
-	
-	
-	vec4 H = normalize((u_CamPos + fs_LightVec) / 2.0);
-	float specularIntensity = max(pow(dot(H, vec4(fs_Nor, 0.0)), 20.0), 0.0);
 
 	// lambertian term for blinn 
 	float diffuseTerm = dot(normalize(vec4(fs_Nor, 0.0)), normalize(fs_LightVec));
@@ -58,7 +54,7 @@ void main() {
 
 	float lightIntensity = diffuseTerm + ambientTerm; 
 	 if(meshOverlap == vec4(1.0)) {
-		out_Col = diffuseColor * (specularIntensity + lightIntensity);
+		out_Col = diffuseColor * lightIntensity;
 	 } else {
 		 out_Col = skyShader();
 	 }

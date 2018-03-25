@@ -19,8 +19,6 @@ import Texture from './rendering/gl/Texture';
 
  // contains 1 in index of each post process to be applied in OpenGlRenderer
  let processes: Array<number> = [0, 0, 0];
- let square: Square;
- let cube: Cube;
 
 // TODO: replace with your scene's stuff
 
@@ -28,7 +26,9 @@ let objAlpaca: string;
 let alpaca: Mesh;
 let texAlpaca: Texture;
 let objTree: string;
-let tree: Mesh; 
+let tree: Mesh;
+let objPlane: string;
+let plane: Mesh;
 
 
 var timer = {
@@ -47,22 +47,22 @@ var timer = {
 function loadOBJText() {
   objAlpaca = readTextFile('../resources/obj/alpaca.obj')
   objTree = readTextFile('../resources/obj/tree.obj')
+  objPlane = readTextFile('../resources/obj/plane.obj')
 }
 
 
 function loadScene() {
-  cube && cube.destroy();
-  square && square.destroy();
   alpaca && alpaca.destroy();
   tree && tree.destroy();
+  plane && plane.destroy();
 
-  square = new Square(vec3.fromValues(0, 0, 0), vec3.fromValues(10, 10, 10));
-  square.create();
-
-  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 2.0);
+  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
   alpaca.create();
 
-  tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0);
+  plane = new Mesh(objPlane, vec3.fromValues(0, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
+  plane.create();
+
+  tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
   tree.create();
 
   texAlpaca = new Texture('../resources/textures/alpaca.jpg')
@@ -99,7 +99,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 9, 50), vec3.fromValues(0, 9, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0, 0, 0, 1);
@@ -110,6 +110,7 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/standard-frag.glsl')),
     ]);
 
+  standardDeferred.setCamPos(camera.position);
   standardDeferred.setupTexUnits(["tex_Color"]);
   let invViewProj = mat4.create();
   mat4.invert(invViewProj, camera.projectionMatrix);
@@ -135,6 +136,7 @@ function main() {
     
 
     camera.update();
+    standardDeferred.setCamPos(camera.controls.eye);
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     timer.updateTime();
@@ -147,7 +149,7 @@ function main() {
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [alpaca, tree]);
+    renderer.renderToGBuffer(camera, standardDeferred, [alpaca, tree, plane]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
