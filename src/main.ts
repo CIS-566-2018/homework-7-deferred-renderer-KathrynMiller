@@ -1,4 +1,4 @@
-import {vec3, mat4, vec4} from 'gl-matrix';
+import {vec3, mat4, vec4, vec2} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -14,7 +14,11 @@ import Texture from './rendering/gl/Texture';
 // Define an object with application parameters and button callbacks
  const controls = {
    'depthOfField': false,
-  'pointilism': false,
+   'focalLength': 50,
+
+   'pointilism': false,
+   'maxDotSize': .4,
+   'numCells': 100,
  };
 
  // contains 1 in index of each post process to be applied in OpenGlRenderer
@@ -82,9 +86,15 @@ function main() {
   // Add controls to the gui
    const gui = new DAT.GUI();
    var shaders = gui.addFolder('Post Processes');
-   var depthOfField = shaders.add(controls, 'depthOfField');
-   var pointilism = shaders.add(controls, 'pointilism');
+   var doF = shaders.addFolder('depthOfField');
+   var depthOffieldOn = doF.add(controls, 'depthOfField');
+   var focalLength = doF.add(controls, 'focalLength', 0.0, 100.0).step(1.0);
    
+   var pointilism = shaders.addFolder('pointilism');
+   var pointilismOn = pointilism.add(controls, 'pointilism');
+   var maxDotSize = pointilism.add(controls, 'maxDotSize', .1, 1.5);
+   var numCells = pointilism.add(controls, 'numCells', 10.0, 200.0);
+
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -116,9 +126,11 @@ function main() {
   mat4.invert(invViewProj, camera.projectionMatrix);
   standardDeferred.setViewProjMatrix(invViewProj);
 
+  renderer.setDimensions(vec2.fromValues(window.innerWidth, window.innerHeight));
+
   function tick() {
 
-    depthOfField.onChange(function() {
+    depthOffieldOn.onChange(function() {
       if(controls.depthOfField.valueOf() == true) {
         processes[0] = 1;
       } else {
@@ -126,12 +138,25 @@ function main() {
       }
     });
 
-    pointilism.onChange(function() {
+    focalLength.onChange(function() {
+      renderer.setExtraData(0, [controls.focalLength.valueOf(), 0, 0, 0]);
+    });
+
+
+    pointilismOn.onChange(function() {
       if(controls.pointilism.valueOf() == true) {
         processes[1] = 1;
       } else {
         processes[1] = 0;
       }
+    });
+
+    maxDotSize.onChange(function() {
+      renderer.setExtraData(1, [controls.maxDotSize.valueOf(), controls.numCells.valueOf(), 0, 0]);
+    });
+
+    numCells.onChange(function() {
+      renderer.setExtraData(1, [controls.maxDotSize.valueOf(), controls.numCells.valueOf(), 0, 0]);
     });
     
 

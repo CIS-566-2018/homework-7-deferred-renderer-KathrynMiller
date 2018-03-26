@@ -4,14 +4,15 @@ precision highp float;
 in vec2 fs_UV;
 out vec4 out_Col;
 
+uniform vec2 u_Dimensions;
 uniform sampler2D u_frame;
 uniform float u_Time;
 
 float width = 1087.0;
 float height = 837.0;
 
-const float numCells = 100.0;
-const float maxDotRadius = .7; // number of pixels of largest dots radius
+uniform vec4 u_ExtraData;
+
 vec3 contrastColor(vec3 color);
 
 //returns value in range [-1, 1]
@@ -20,6 +21,9 @@ vec2 random2( vec2 p ) {
 }
 
 void main() {
+
+float maxDotRadius = u_ExtraData[0];
+float numCells = u_ExtraData[1];
 
  vec4 color = texture(u_frame, fs_UV);
  float luminance = 0.21 * color[0] + 0.72 * color[1] + 0.07 * color[2]; //[0, 1]

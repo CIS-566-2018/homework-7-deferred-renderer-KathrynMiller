@@ -1,4 +1,4 @@
-import {mat4, vec4, vec3} from 'gl-matrix';
+import {mat4, vec4, vec3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import Camera from '../../Camera';
 import {gl} from '../../globals';
@@ -79,7 +79,10 @@ class OpenGLRenderer {
 
     // TODO: these are placeholder post shaders, replace them with something good
      this.allPost8Passes.push(this.depthField);
+     this.depthField.setExtraData([50, 0, 0, 0]);
+
      this.allPost8Passes.push(this.pointilism);
+     this.pointilism.setExtraData([.4, 100, 0, 0]);
 
 // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
@@ -107,6 +110,14 @@ class OpenGLRenderer {
 
     }
 
+    setDimensions(dim: vec2) {
+      for(let i = 0; i < this.allPost8Passes.length; i++) {
+        this.allPost8Passes[i].setDimensions(dim);
+      }
+      for(let i = 0; i < this.post32Passes.length; i++) {
+        this.post32Passes[i].setDimensions(dim);
+      }
+    }
    
 
   setClearColor(r: number, g: number, b: number, a: number) {
@@ -377,6 +388,10 @@ class OpenGLRenderer {
         this.add8BitPass(this.allPost8Passes[i]);
       }
     }
+  }
+
+  setExtraData(i: number, data: number[]) {
+    this.allPost8Passes[i].setExtraData(data);
   }
 
 };

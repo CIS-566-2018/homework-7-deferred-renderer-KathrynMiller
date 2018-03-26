@@ -1,4 +1,4 @@
-import {vec4, mat4, vec3} from 'gl-matrix';
+import {vec4, mat4, vec3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import Texture from './Texture';
 import {gl} from '../../globals';
@@ -28,7 +28,9 @@ class ShaderProgram {
   attrCol: number;
   attrUV: number;
 
+  unifDim: WebGLUniformLocation;
   unifCamPos: WebGLUniformLocation;
+  unifExtraData: WebGLUniformLocation;
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
@@ -62,7 +64,9 @@ class ShaderProgram {
     this.unifProj = gl.getUniformLocation(this.prog, "u_Proj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
-    this.unifCamPos = gl.getUniformLocation(this.prog, "u_CamPos")
+    this.unifCamPos = gl.getUniformLocation(this.prog, "u_CamPos");
+    this.unifExtraData = gl.getUniformLocation(this.prog, "u_ExtraData");
+    this.unifDim = gl.getUniformLocation(this.prog, "u_Dimensions");
 
 
     this.unifTexUnits = new Map<string, WebGLUniformLocation>();
@@ -148,10 +152,24 @@ class ShaderProgram {
     }
   }
 
+  setDimensions(d: vec2) {
+    this.use();
+    if (this.unifDim !== -1) {
+      gl.uniform2f(this.unifDim, d[0], d[1]);
+    }
+  }
+
   setCamPos(p: vec3) {
     this.use();
     if (this.unifCamPos !== -1) {
       gl.uniform3fv(this.unifCamPos, p);
+    }
+  }
+
+  setExtraData(data: number[]) {
+    this.use();
+    if (this.unifExtraData !== -1) {
+      gl.uniform4fv(this.unifExtraData, data);
     }
   }
 
