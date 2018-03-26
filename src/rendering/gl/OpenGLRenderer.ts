@@ -54,6 +54,19 @@ class OpenGLRenderer {
       new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthPost-frag.glsl'))
     );
 
+    bloomBlend : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloomBlend.glsl'))
+    );
+
+    bloomBlur : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloomBlur.glsl'))
+    );
+
+    bloomHighPass : PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloomHighPass.glsl'))
+    );
+
+
 
   add8BitPass(pass: PostProcess) {
     this.post8Passes.push(pass);
@@ -68,13 +81,13 @@ class OpenGLRenderer {
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
     this.gbTargets = [undefined, undefined, undefined];
-    this.post8Buffers = [undefined, undefined];
-    this.post8Targets = [undefined, undefined];
+    this.post8Buffers = [undefined, undefined, undefined];
+    this.post8Targets = [undefined, undefined, undefined];
     this.post8Passes = [];
     this.allPost8Passes = [];
 
-    this.post32Buffers = [undefined, undefined];
-    this.post32Targets = [undefined, undefined];
+    this.post32Buffers = [undefined, undefined, undefined];
+    this.post32Targets = [undefined, undefined, undefined];
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
@@ -84,7 +97,14 @@ class OpenGLRenderer {
      this.allPost8Passes.push(this.pointilism);
      this.pointilism.setExtraData([.4, 100, 0, 0]);
 
-// this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+     this.add32BitPass(this.bloomHighPass);
+     this.add32BitPass(this.bloomBlur);
+     this.add32BitPass(this.bloomBlend);
+
+     var originalImage = gl.getUniformLocation(this.bloomBlend.prog, "originalImage");
+     this.bloomBlend.use();
+     gl.uniform1i(originalImage, 1); // store original image in texture slot 1 for 32 bit bloom pass
+
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -284,66 +304,104 @@ class OpenGLRenderer {
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
     }
 
+// render again to different target
     this.deferredShader.draw();
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[2]);
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    this.deferredShader.draw();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
   }
 
 
-  // TODO: pass any info you need as args
-  renderPostProcessHDR(processes: Array<number>) {
-    // TODO: replace this with your post 32-bit pipeline
-    // the loop shows how to swap between frame buffers and textures given a list of processes,
-    // but specific shaders (e.g. bloom) need specific info as textures
-    let i = 0;
-    for (i = 0; i < this.post32Passes.length; i++){
-      // Pingpong framebuffers for each pass.
-      // In other words, repeatedly flip between storing the output of the
-      // current post-process pass in post32Buffers[1] and post32Buffers[0].
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]); // current pass will be written here
-
-      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-      gl.disable(gl.DEPTH_TEST);
-      gl.enable(gl.BLEND);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      // Recall that each frame buffer is associated with a texture that stores
-      // the output of a render pass. post32Targets is the array that stores
-      // these textures, so we alternate reading from the 0th and 1th textures
-      // each frame (the texture we wrote to in our previous render pass).
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]); // read from the previously written to target
-
-      this.post32Passes[i].draw();
-
-      // bind default frame buffer
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
-
-    // apply tonemapping
-    // TODO: if you significantly change your framework, ensure this doesn't cause bugs!
-    // render to the first 8 bit buffer if there is more post, else default buffer
-    
-    // update applied pass list
-    this.updatePostPassList(processes);
-    if (this.post8Passes.length > 0) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]); // write tonemap to first 8 buffer
-    }
-    else {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null); // write tonemap to screen
-    }
+// TODO: pass any info you need as args
+renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
+  if(bloom)  {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write bloom HighPass here
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[2]); // bind original image to first texture slot
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // read from original image
+
+    this.post32Passes[0].draw();
+
+    // bind default frame buffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    //------- blur high pass image ------------
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[0]); // write bloomBlur here
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.activeTexture(gl.TEXTURE0);
-    // bound texture is the last one processed before
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[Math.max(0, i) % 2]);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[1]); // read from bloom high pass
 
-    this.tonemapPass.draw(); // draw to bound buffer
-  }
+    this.post32Passes[1].draw();
+
+    // bind default frame buffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // ------- blend original and blurred high pass ----------
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write final bloom
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // blurred high pass is in tex0, original is in tex1
+
+    this.post32Passes[2].draw();
+
+    // bind default frame buffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+
+// apply tonemapping
+// TODO: if you significantly change your framework, ensure this doesn't cause bugs!
+// render to the first 8 bit buffer if there is more post, else default buffer
+
+// update applied pass list
+this.updatePostPassList(processes);
+if (this.post8Passes.length > 0) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]); // write tonemap to first 8 buffer
+}
+else {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); // write tonemap to screen
+}
+
+gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+gl.disable(gl.DEPTH_TEST);
+gl.enable(gl.BLEND);
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+gl.activeTexture(gl.TEXTURE0);
+// bound texture is the last one processed before
+gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
+
+this.tonemapPass.draw(); // draw to bound buffer
+}
 
 
   // TODO: pass any info you need as args

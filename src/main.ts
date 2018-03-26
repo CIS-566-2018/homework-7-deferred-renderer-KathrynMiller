@@ -19,6 +19,8 @@ import Texture from './rendering/gl/Texture';
    'pointilism': false,
    'maxDotSize': .4,
    'numCells': 100,
+
+   'bloom': false,
  };
 
  // contains 1 in index of each post process to be applied in OpenGlRenderer
@@ -60,13 +62,13 @@ function loadScene() {
   tree && tree.destroy();
   plane && plane.destroy();
 
-  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
+  alpaca = new Mesh(objAlpaca, vec3.fromValues(0, 0, 0), 0.0, vec3.fromValues(0.0, 0.5, 1.0));
   alpaca.create();
 
-  plane = new Mesh(objPlane, vec3.fromValues(0, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
+  plane = new Mesh(objPlane, vec3.fromValues(0, 0, 0), 2.0, vec3.fromValues(6.0 / 255.0, 8.0 / 255.0, 32.0 / 255.0));
   plane.create();
 
-  tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0, vec3.fromValues(0.0, 0.0, 0.0));
+  tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0, vec3.fromValues(123.0 / 255.0, 25.0 / 255.0, 112.0 / 255.0));
   tree.create();
 
   texAlpaca = new Texture('../resources/textures/alpaca.jpg')
@@ -86,6 +88,7 @@ function main() {
   // Add controls to the gui
    const gui = new DAT.GUI();
    var shaders = gui.addFolder('Post Processes');
+
    var doF = shaders.addFolder('depthOfField');
    var depthOffieldOn = doF.add(controls, 'depthOfField');
    var focalLength = doF.add(controls, 'focalLength', 0.0, 100.0).step(1.0);
@@ -94,6 +97,9 @@ function main() {
    var pointilismOn = pointilism.add(controls, 'pointilism');
    var maxDotSize = pointilism.add(controls, 'maxDotSize', .1, 1.5);
    var numCells = pointilism.add(controls, 'numCells', 10.0, 200.0);
+
+   var bloom = shaders.addFolder('Bloom');
+   var bloomOn = bloom.add(controls, 'bloom');
 
 
   // get canvas and webgl context
@@ -178,7 +184,7 @@ function main() {
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
-    renderer.renderPostProcessHDR(processes);
+    renderer.renderPostProcessHDR(processes, controls.bloom.valueOf());
     // apply 8-bit post and draw
     renderer.renderPostProcessLDR();
 

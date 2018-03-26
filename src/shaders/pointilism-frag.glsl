@@ -8,9 +8,6 @@ uniform vec2 u_Dimensions;
 uniform sampler2D u_frame;
 uniform float u_Time;
 
-float width = 1087.0;
-float height = 837.0;
-
 uniform vec4 u_ExtraData;
 
 vec3 contrastColor(vec3 color);

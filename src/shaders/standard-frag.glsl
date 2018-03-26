@@ -28,9 +28,9 @@ void main() {
     col = pow(col, vec3(2.2));
 
     if(fs_Type == 2.0) {
-        vec3 col = vec3(fs_Col);
+      col = vec3(fs_Col);
     }
-    
+
     // normal and depth value in w
     fragColor[0] = fs_Nor;
     // 1 since mesh overlaps
