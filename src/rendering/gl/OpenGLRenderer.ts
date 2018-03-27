@@ -319,22 +319,16 @@ class OpenGLRenderer {
 
   }
 
-
-// TODO: pass any info you need as args
-renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
-  if(bloom)  {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write bloom HighPass here
+renderBloom() {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[2]); // write bloom HighPass here
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[2]); // bind original image to first texture slot
-
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // read from original image
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
 
     this.post32Passes[0].draw();
 
@@ -343,7 +337,7 @@ renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
 
     //------- blur high pass image ------------
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[0]); // write bloomBlur here
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write bloomBlur here
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.disable(gl.DEPTH_TEST);
@@ -351,7 +345,7 @@ renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[1]); // read from bloom high pass
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[2]); // read from bloom high pass
 
     this.post32Passes[1].draw();
 
@@ -360,7 +354,7 @@ renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
 
     // ------- blend original and blurred high pass ----------
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[1]); // write final bloom
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[2]); // write final bloom
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.disable(gl.DEPTH_TEST);
@@ -368,13 +362,21 @@ renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // blurred high pass is in tex0, original is in tex1
-
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[1]); // blurred high pass is in tex0, original is in tex1
+    
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]); // read from original image
     this.post32Passes[2].draw();
 
     // bind default frame buffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
+
+// TODO: pass any info you need as args
+renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
+  if(bloom)  {
+    this.renderBloom();
+  }
 
 
 // apply tonemapping
@@ -396,9 +398,15 @@ gl.disable(gl.DEPTH_TEST);
 gl.enable(gl.BLEND);
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-gl.activeTexture(gl.TEXTURE0);
 // bound texture is the last one processed before
 gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
+gl.activeTexture(gl.TEXTURE0);
+if(bloom) {
+  gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[2]);
+} else {
+  gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
+}
+
 
 this.tonemapPass.draw(); // draw to bound buffer
 }
