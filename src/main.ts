@@ -129,6 +129,7 @@ function main() {
     ]);
 
   standardDeferred.setCamPos(camera.position);
+  renderer.setExtraData32(0, [.7,0,  0, 0]);
   standardDeferred.setupTexUnits(["tex_Color"]);
   let invViewProj = mat4.create();
   mat4.invert(invViewProj, camera.projectionMatrix);
