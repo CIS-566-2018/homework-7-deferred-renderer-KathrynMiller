@@ -10,13 +10,16 @@ uniform vec2 u_Dimensions;
 uniform sampler2D depth;
 uniform sampler2D u_frame;
 uniform float u_Time;
+uniform vec3 u_CamPos;
+uniform mat4 u_View;
+uniform mat4 u_Proj;
 
 float width = 1087.0;
 float height = 837.0;
 
 const float PI = 3.14159;
 const float E = 2.71828;
-const float SIGMA = 1.0;
+const float sigma = 1.0;
 
 /*
 void createKernel(inout float kernel[225.0], float size) {
@@ -32,15 +35,16 @@ void createKernel(inout float kernel[225.0], float size) {
 }
 */
 void main() {
+
 	float focalLength = u_ExtraData[0];
 	vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 	//vec4 color = texture(u_frame, fs_UV);
-	float depth = texture(depth, fs_UV)[3];
+	float depth = u_CamPos.z - texture(depth, fs_UV)[3];
 	float kernel[int(225.0)];
 	float depthScale = 0.0;
 	float kernelSize = 0.0;
 	if(depth > focalLength) {
-		depthScale = 1.0 - ((depth - focalLength) / 1000.);
+		depthScale = 1.0 - ((depth - focalLength) / 10000.);
 		kernelSize = 15.0 * depthScale;
 		if(depth > 900.0) {
 			kernelSize = 15.0;
@@ -60,5 +64,4 @@ void main() {
 		out_Col = texture(u_frame, fs_UV);
 	}
 	
-	//out_Col = color;
 }
