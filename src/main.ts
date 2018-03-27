@@ -21,6 +21,7 @@ import Texture from './rendering/gl/Texture';
    'numCells': 100,
 
    'bloom': false,
+   'luminanceThreshold': .7,
  };
 
  // contains 1 in index of each post process to be applied in OpenGlRenderer
@@ -100,6 +101,7 @@ function main() {
 
    var bloom = shaders.addFolder('Bloom');
    var bloomOn = bloom.add(controls, 'bloom');
+   var luminanceThreshold = bloom.add(controls, 'luminanceThreshold', 0.0, 1.0);
 
 
   // get canvas and webgl context
@@ -163,6 +165,10 @@ function main() {
 
     numCells.onChange(function() {
       renderer.setExtraData(1, [controls.maxDotSize.valueOf(), controls.numCells.valueOf(), 0, 0]);
+    });
+
+    luminanceThreshold.onChange(function() {
+      renderer.setExtraData32(0, [controls.luminanceThreshold.valueOf(),0,  0, 0]);
     });
     
 

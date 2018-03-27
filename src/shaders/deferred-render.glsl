@@ -107,7 +107,7 @@ vec4 skyShader() {
 	vec3 cellColor = rand3(cellOrig);
     vec4 color = vec4(cellColor.rgbb) * .3;
     color *= (1.0 - distToCenter) * .4;
-	color *= 7.0;
+	color *= 10.0;
 	return color;
 
 }

@@ -6,7 +6,6 @@ uniform mat4 u_ModelInvTr;
 
 uniform mat4 u_View;   
 uniform mat4 u_Proj; 
-uniform vec3 u_CamPos;
 
 in vec4 vs_Pos;
 in vec4 vs_Nor;
@@ -32,7 +31,7 @@ void main()
     mat3 invTranspose = mat3(u_ModelInvTr);
     mat3 view = mat3(u_View);
     // set w to be camera space z
-    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), u_CamPos.z - vs_Pos.z);
+    fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), vs_Pos.z);
     fs_Pos = u_View * u_Model * vs_Pos;
     
     gl_Position = u_Proj * u_View * u_Model * vs_Pos;

@@ -378,7 +378,6 @@ renderPostProcessHDR(processes: Array<number>, bloom: boolean) {
     this.renderBloom();
   }
 
-
 // apply tonemapping
 // TODO: if you significantly change your framework, ensure this doesn't cause bugs!
 // render to the first 8 bit buffer if there is more post, else default buffer
@@ -406,7 +405,6 @@ if(bloom) {
 } else {
   gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
 }
-
 
 this.tonemapPass.draw(); // draw to bound buffer
 }
@@ -458,6 +456,10 @@ this.tonemapPass.draw(); // draw to bound buffer
 
   setExtraData(i: number, data: number[]) {
     this.allPost8Passes[i].setExtraData(data);
+  }
+
+  setExtraData32(i: number, data: number[]) {
+    this.post32Passes[i].setExtraData(data);
   }
 
 };
