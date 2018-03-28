@@ -3641,9 +3641,9 @@ var timer = {
     },
 };
 function loadOBJText() {
-    objAlpaca = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/alpaca.obj');
-    objTree = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/tree.obj');
-    objPlane = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/plane.obj');
+    objAlpaca = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('static/obj/alpaca.obj');
+    objTree = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('static/obj/tree.obj');
+    objPlane = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('static/obj/plane.obj');
 }
 function loadScene() {
     alpaca && alpaca.destroy();
@@ -3655,7 +3655,7 @@ function loadScene() {
     plane.create();
     tree = new __WEBPACK_IMPORTED_MODULE_3__geometry_Mesh__["a" /* default */](objTree, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(-10, 0, 0), 2.0, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(123.0 / 255.0, 25.0 / 255.0, 112.0 / 255.0));
     tree.create();
-    texAlpaca = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_Texture__["a" /* default */]('../resources/textures/alpaca.jpg');
+    texAlpaca = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_Texture__["a" /* default */]('static/textures/alpaca.jpg');
 }
 function main() {
     // Initial display for framerate

@@ -52,9 +52,9 @@ var timer = {
 
 
 function loadOBJText() {
-  objAlpaca = readTextFile('../resources/obj/alpaca.obj')
-  objTree = readTextFile('../resources/obj/tree.obj')
-  objPlane = readTextFile('../resources/obj/plane.obj')
+  objAlpaca = readTextFile('static/obj/alpaca.obj')
+  objTree = readTextFile('static/obj/tree.obj')
+  objPlane = readTextFile('static/obj/plane.obj')
 }
 
 
@@ -72,7 +72,7 @@ function loadScene() {
   tree = new Mesh(objTree, vec3.fromValues(-10, 0, 0), 2.0, vec3.fromValues(123.0 / 255.0, 25.0 / 255.0, 112.0 / 255.0));
   tree.create();
 
-  texAlpaca = new Texture('../resources/textures/alpaca.jpg')
+  texAlpaca = new Texture('static/textures/alpaca.jpg')
   
 }
 
