@@ -1,5 +1,6 @@
 # Kathryn Miller: The Return of Amy Lou Paca
 
+https://kathrynmiller.github.io/homework-7-deferred-renderer-KathrynMiller/
 
 
 ## Reinhard ToneMapping
